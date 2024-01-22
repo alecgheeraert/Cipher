@@ -90,6 +90,9 @@ class Controller:
 
     def render(self):
         if self._render:
+            if window_should_close():
+                close_window()
+                return False
             self.__render()
 
     def __physics(self):
