@@ -4,7 +4,7 @@ import time
 
 controller = Controller(20.0, 0.2)
 
-for i in range(2):
+for i in range(1):
     print("[position_x, position_y, position_z, velocity_x, velocity_y, velocity_z, time]")
     observation = controller.reset()
     terminated = truncated = False
@@ -15,9 +15,9 @@ for i in range(2):
     while not terminated and not truncated:
         counter += 1
         if abs(angle) < pi:
-            steering = -0.1
+            steering = -0.3
         else:
-            steering = 0.1
+            steering = 0.3
         observation, reward, terminated, truncated = controller.step(0, 0, steering)
         print(observation, steering)
         controller.render()

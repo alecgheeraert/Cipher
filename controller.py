@@ -1,4 +1,4 @@
-from enum import Enum
+from random import *
 from pyray import *
 from math import *
 
@@ -42,7 +42,6 @@ class Controller:
         self._observation_space = _ObservationSpace()
         self._action_space = self.__action_space()
         self.reset()
-        self.__physics()
 
     def reset(self):
         resistance_drag = 5.0
@@ -68,6 +67,11 @@ class Controller:
         # acceleration (m/s^2, m/s^2)
         self.__wc_acceleration_x = 0.0
         self.__wc_acceleration_y = 0.0
+        # run physics
+        self.__slip()
+        for _ in range(3):
+            self.__physics(True)
+        
         # clear renderer
         return self.__observation()
 
@@ -95,7 +99,7 @@ class Controller:
                 return False
             self.__render()
 
-    def __physics(self):
+    def __physics(self, slip=False):
         # constants
         mass = 1500
         inertia = 1500
@@ -139,6 +143,12 @@ class Controller:
         traction_x = (force_engine * self.__wc_throttle) - (force_brake * self.__wc_brake) * copysign(1.0, velocity_x)
         traction_y = 0.0
 
+        if slip:
+            lateral_front *= self.__slip_lateral_front
+            lateral_rear *= self.__slip_lateral_rear
+            traction_x *= self.__slip_traction_x
+            print(lateral_front, lateral_rear, traction_x, self.__wc_steering)
+
         # calculate total force on each axes
         force_x = drag_x + roll_x + traction_x
         force_y = drag_y + roll_y + traction_y + cos(self.__wc_steering) * lateral_front + lateral_rear
@@ -157,6 +167,15 @@ class Controller:
         self.__wc_position_y += (velocity_y * self._dt) + (self.__wc_acceleration_y * self._dt * self._dt) * 0.5        
         self.__wc_position_z = (self.__wc_position_z + (self._dt * self.__wc_velocity_z * self._dt) * 0.5) % (2 * pi)
         self.__wc_time += self._dt
+
+    def __slip(self):
+        self.__slip_lateral_front = round(uniform(0.8, 1.0), 3)
+        self.__slip_lateral_rear = round(uniform(0.6, 0.8), 3)
+        self.__slip_traction_x = round(uniform(0.6, 0.8), 3)
+        if randint(0, 1) == 0:
+            self.__wc_steering = round(uniform(0.2, 0.3), 2)
+        else:
+            self.__wc_steering = round(uniform(-0.3, -0.2), 2)
 
     def __action_space(self):
         return [
